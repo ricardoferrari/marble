@@ -1,14 +1,8 @@
-import { TestBed, flush } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { TestScheduler } from 'rxjs/testing';
-import { throttleTime } from 'rxjs';
 
-const testScheduler = new TestScheduler((actual, expected) => {
-  // asserting the two objects are equal - required
-  // for TestScheduler assertions to work via your test framework
-  // e.g. using chai.
-  expect(actual).toEqual(expected);
-});
+let testScheduler: any;
 
 describe('AppComponent', () => {
 
@@ -21,6 +15,10 @@ describe('AppComponent', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(AppComponent);
     component = fixture.componentInstance;
+
+    testScheduler = new TestScheduler((actual, expected) => {
+      expect(actual).toEqual(expected);
+    });
   });
 
   it('should create the app', () => {
@@ -37,28 +35,84 @@ describe('AppComponent', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('Hello, marble');
   });
 
-  it('generates the stream correctly', () => {
-    testScheduler.run((helpers) => {
-      const { cold, time, expectObservable, expectSubscriptions } = helpers;
-      const e1 = cold(' -a--b--c---|');
-      const e1subs = '  ^----------!';
-      const t = time('   ---|       '); // t = 3
-      const expected = '-a-----c---|';
+  it('should have a service', () => {
+    expect((component as any).service).toBeTruthy();
+  });
 
-      expectObservable(e1.pipe(throttleTime(t))).toBe(expected);
-      expectSubscriptions(e1.subscriptions).toBe(e1subs);
+  it('when setFlag was called, should load data and set flag to true', () => {
+    testScheduler.run((helpers) => {
+      const { cold, flush, expectObservable, expectSubscriptions } = helpers;
+      const flags = cold('     b--a--a ', { a: 'fake', b: 'notfake' });
+      const destroys = cold('  -----a| ');
+      const expectFlags = '    b--a-|  ';
+      const expectSubs = '     ^----!  ';
+
+      (component as any).destroy$ = destroys;
+      const flagsReceived = (component as any).setFlag(flags);
+
+      expectObservable(flagsReceived).toBe(expectFlags, { a: 'fake', b: 'notfake' });
+      expectSubscriptions(flags.subscriptions).toBe(expectSubs);
+
+      flush();
+      (component as any).destroy$ = {
+        next: jest.fn(),
+        complete: jest.fn()
+      };
+      expect(component.fakeFlag).toBe(true);
     });
   });
 
-  it('when setFlag was called, should load data and set flag', () => {
+  it('when setFlag was called, should load data and set flag to false', () => {
     testScheduler.run((helpers) => {
-      const { cold, flush } = helpers;
-      const flags = cold('a--b--a', { a: 'fake', b: 'notfake' });
+      const { cold, flush, expectObservable, expectSubscriptions } = helpers;
 
-      (component as any).setFlag(flags);
+      const flags = cold('     b--a--a ', { a: 'fake', b: 'notfake' });
+      const destroys = cold('  --a|    ');
+      const expectFlags = '    b-|     ';
+      const expectSubs = '     ^-!     ';
 
+      (component as any).destroy$ = destroys;
+      const flagsReceived = (component as any).setFlag(flags);
+
+      expectObservable(flagsReceived).toBe(expectFlags, { a: 'fake', b: 'notfake' });
+      expectSubscriptions(flags.subscriptions).toBe(expectSubs);
+
+      // Note: Sincrroniza execução para avaliar o resultado da flag
       flush();
-      expect(component.fakeFlag).toBe(true);
+      expect(component.fakeFlag).toBe(false);
+
+      // NOTE: Como o destroy$ foi substituido ao chamar o ciclo
+      // de vida, é necessário redefinir o destroy$ para evitar
+      // problemas por metodos indefinidos.
+      (component as any).destroy$ = {
+        next: jest.fn(),
+        complete: jest.fn()
+      };
+    });
+  });
+
+  it.each([
+    [ 'b--a--a', 'b--a--a', true, 3 ],
+    [ 'a--a--b', 'a--a--b', false, 3 ],
+    [ 'b|a', 'b|', false, 1 ],
+    [ 'a|a', 'a|', true, 1 ],
+  ])('when setFlag was called with %s, should load data and set flag to %s', (diagram, expected, flag, times) => {
+    testScheduler.run(helpers => {
+      const { cold, flush, expectObservable } = helpers;
+
+      const flags = cold(diagram, { a: 'fake', b: 'notfake' });
+      const expectFlags = expected;
+
+      jest.spyOn(console, 'log').mockImplementation(() => {}).mockClear();
+
+      const flagsReceived = (component as any).setFlag(flags);
+
+      expectObservable(flagsReceived).toBe(expectFlags, { a: 'fake', b: 'notfake' });
+
+      // Note: Sincrroniza execução para avaliar o resultado da flag
+      flush();
+      expect(component.fakeFlag).toBe(flag);
+      expect(console.log).toHaveBeenCalledTimes(times);
     });
   });
 
@@ -75,22 +129,40 @@ describe('AppComponent', () => {
   });
 
 
-  it('when ngOnDestroy was called, should unsubscribe', () => {
+  it('when ngOnInit was called, should subscribe for flags', () => {
+    testScheduler.frame = 0;
     testScheduler.run((helpers) => {
-      const { hot, expectSubscriptions, flush } = helpers;
-      const flags = hot('                  a--b--a');
-      const destroys = hot('               ---a|');
-      const expectSubs = '-----------------^--! ';
-
+      const { cold, expectSubscriptions, flush } = helpers;
+      const flags = cold('     a--b--a     ', { a: 'fake', b: 'notfake' });
+      const destroys = cold('  -------(a|) ');
+      const expectSubs = '     ^------!    ';
 
       (component as any).service$ = flags;
       (component as any).destroy$ = destroys;
+
       (component as any).ngOnInit();
+
       flush();
-      (component as any).ngOnDestroy();
+      (component as any).destroy$ = {
+        next: jest.fn(),
+        complete: jest.fn()
+      };
 
       expectSubscriptions(flags.subscriptions).toBe(expectSubs);
+
     });
+  });
+
+  it('when ngOnDestroy was called, should unsubscribe', () => {
+    (component as any).destroy$ = {
+      next: jest.fn(),
+      complete: jest.fn()
+    };
+
+    (component as any).ngOnDestroy();
+
+    expect((component as any).destroy$.next).toHaveBeenCalled();
+    expect((component as any).destroy$.complete).toHaveBeenCalled();
   });
 
 

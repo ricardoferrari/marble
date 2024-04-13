@@ -25,6 +25,7 @@ export class AppComponent implements OnInit, OnDestroy{
   private service: FakeService;
   private destroy$: Subject<void> = new Subject<void>();
   private service$: any;
+  private flags$: any;
   public fakeFlag: boolean = false;
 
 
@@ -36,7 +37,14 @@ export class AppComponent implements OnInit, OnDestroy{
   }
 
   public ngOnInit(): void {
-    this.setFlag(this.service$);
+    this.flags$ = this.setFlag(this.service$);
+    this.flags$.subscribe({
+      next: (result: string) => {
+        console.log('Resultado Flag: ', this.fakeFlag, result);
+      },
+      error: (error: string) => console.log('Erro:', error),
+      complete: () => console.log('complete')
+    });
     this.service.loadData();
   }
 
@@ -45,19 +53,15 @@ export class AppComponent implements OnInit, OnDestroy{
     this.destroy$.complete();
   }
 
-  private setFlag(obs: Observable<string>) {
-    obs.pipe(
+  private setFlag(obs: Observable<string>): Observable<string> {
+    return obs.pipe(
       takeUntil(this.destroy$),
-      tap((result) => (this.result = result)),
-      tap(console.log)
-    ).subscribe({
-      next: (result) => {
+      tap((result) => {
+        this.result = result;
         this.fakeFlag = (result === 'fake');
-        console.log('Resultado Flag: ', this.fakeFlag, result);
-      },
-      error: (error) => console.log('Erro:', error),
-      complete: () => console.log('complete')
-    });
+      }),
+      tap(console.log),
+    );
   }
 
 }
