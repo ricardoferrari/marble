@@ -18,16 +18,15 @@ class FakeService {
   standalone: true,
   imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
 })
-export class AppComponent implements OnInit, OnDestroy{
+export class AppComponent implements OnInit, OnDestroy {
   public title = 'marble';
   private service: FakeService;
   private destroy$: Subject<void> = new Subject<void>();
   private service$: any;
   private flags$: any;
   public fakeFlag: boolean = false;
-
 
   public result: string = '';
 
@@ -43,7 +42,7 @@ export class AppComponent implements OnInit, OnDestroy{
         console.log('Resultado Flag: ', this.fakeFlag, result);
       },
       error: (error: string) => console.log('Erro:', error),
-      complete: () => console.log('complete')
+      complete: () => console.log('complete'),
     });
     this.service.loadData();
   }
@@ -56,12 +55,11 @@ export class AppComponent implements OnInit, OnDestroy{
   private setFlag(obs: Observable<string>): Observable<string> {
     return obs.pipe(
       takeUntil(this.destroy$),
-      tap((result) => {
+      tap(result => {
         this.result = result;
-        this.fakeFlag = (result === 'fake');
+        this.fakeFlag = result === 'fake';
       }),
-      tap(console.log),
+      tap(console.log)
     );
   }
-
 }

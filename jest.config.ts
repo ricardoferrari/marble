@@ -3,9 +3,23 @@
  * https://jestjs.io/docs/configuration
  */
 
-const esModules = ['@angular', '@ngrx', 'rxjs', 'zone.js', 'lodash-es', 'lodash', 'tslib', 'core-js', 'tslib', 'tslib.es6', 'tslib.es6.js', 'tslib.es6.mjs', 'tslib.es6.mjs'];
+const esModules = [
+  '@angular',
+  '@ngrx',
+  'rxjs',
+  'zone.js',
+  'lodash-es',
+  'lodash',
+  'tslib',
+  'core-js',
+  'tslib',
+  'tslib.es6',
+  'tslib.es6.js',
+  'tslib.es6.mjs',
+  'tslib.es6.mjs',
+];
 
-import type {Config} from 'jest';
+import type { Config } from 'jest';
 
 const config: Config = {
   // All imported modules in your tests should be mocked automatically
@@ -37,7 +51,7 @@ const config: Config = {
   // ],
 
   // Indicates which provider should be used to instrument code for coverage
-  coverageProvider: "v8",
+  coverageProvider: 'v8',
 
   // A list of reporter names that Jest uses when writing coverage reports
   // coverageReporters: [
@@ -77,9 +91,7 @@ const config: Config = {
   // maxWorkers: "50%",
 
   // An array of directory names to be searched recursively up from the requiring module's location
-  moduleDirectories: [
-    "node_modules"
-  ],
+  moduleDirectories: ['node_modules'],
 
   // An array of file extensions your modules use
   moduleFileExtensions: ['ts', 'html', 'js', 'json', 'mjs'],
@@ -123,9 +135,7 @@ const config: Config = {
   // rootDir: undefined,
 
   // A list of paths to directories that Jest should use to search for files in
-  roots: [
-    "<rootDir>"
-  ],
+  roots: ['<rootDir>'],
 
   // Allows you to use a custom runner instead of Jest's default test runner
   // runner: "jest-runner",
@@ -144,7 +154,7 @@ const config: Config = {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  testEnvironment: "jest-environment-jsdom",
+  testEnvironment: 'jest-environment-jsdom',
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
@@ -153,10 +163,7 @@ const config: Config = {
   // testLocationInResults: false,
 
   // The glob patterns Jest uses to detect test files
-  testMatch: [
-    "**/__tests__/**/*.[jt]s?(x)",
-    "**/?(*.)+(spec|test).[tj]s?(x)"
-  ],
+  testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[tj]s?(x)'],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   // testPathIgnorePatterns: [
@@ -175,13 +182,21 @@ const config: Config = {
   // A map from regular expressions to paths to transformers
   // transform: undefined,
   transform: {
-    '^.+\\.(ts|js|mjs|html|svg)$': ['jest-preset-angular', { esModule: true, tsconfig: '<rootDir>/tsconfig.spec.json', stringifyContentPathRegex: '\\.html$', isolatedModules: true}],
+    '^.+\\.(ts|js|mjs|html|svg)$': [
+      'jest-preset-angular',
+      {
+        esModule: true,
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        stringifyContentPathRegex: '\\.html$',
+        isolatedModules: true,
+      },
+    ],
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   transformIgnorePatterns: [
     `<rootDir>/node_modules/(?!.*\\.mjs$|${esModules.join('|')})`,
-  ]
+  ],
 
   // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
   // unmockedModulePathPatterns: undefined,
