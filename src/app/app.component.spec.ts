@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { TestScheduler } from 'rxjs/testing';
+import { RunHelpers, TestScheduler } from 'rxjs/testing';
 
 let testScheduler: any;
 
@@ -40,7 +40,7 @@ describe('AppComponent', () => {
   });
 
   it('when setFlag was called, should load data and set flag to true', () => {
-    testScheduler.run((helpers) => {
+    testScheduler.run((helpers: RunHelpers) => {
       const { cold, flush, expectObservable, expectSubscriptions } = helpers;
       const flags = cold('     b--a--a ', { a: 'fake', b: 'notfake' });
       const destroys = cold('  -----a| ');
@@ -63,7 +63,7 @@ describe('AppComponent', () => {
   });
 
   it('when setFlag was called, should load data and set flag to false', () => {
-    testScheduler.run((helpers) => {
+    testScheduler.run((helpers: RunHelpers) => {
       const { cold, flush, expectObservable, expectSubscriptions } = helpers;
 
       const flags = cold('     b--a--a ', { a: 'fake', b: 'notfake' });
@@ -96,8 +96,8 @@ describe('AppComponent', () => {
     [ 'a--a--b', 'a--a--b', false, 3 ],
     [ 'b|a', 'b|', false, 1 ],
     [ 'a|a', 'a|', true, 1 ],
-  ])('when setFlag was called with %s, should load data and set flag to %s', (diagram, expected, flag, times) => {
-    testScheduler.run(helpers => {
+  ])('when setFlag was called with %s, should load data and set flag to %s', (diagram: string, expected: string, flag: boolean, times: number) => {
+    testScheduler.run((helpers: RunHelpers) => {
       const { cold, flush, expectObservable } = helpers;
 
       const flags = cold(diagram, { a: 'fake', b: 'notfake' });
@@ -117,7 +117,7 @@ describe('AppComponent', () => {
   });
 
   it('when setFlag was called with error, should not set flag', () => {
-    testScheduler.run((helpers) => {
+    testScheduler.run((helpers: RunHelpers) => {
       const { cold, flush } = helpers;
       const flags = cold('#');
 
@@ -131,7 +131,7 @@ describe('AppComponent', () => {
 
   it('when ngOnInit was called, should subscribe for flags', () => {
     testScheduler.frame = 0;
-    testScheduler.run((helpers) => {
+    testScheduler.run((helpers: RunHelpers) => {
       const { cold, expectSubscriptions, flush } = helpers;
       const flags = cold('     a--b--a     ', { a: 'fake', b: 'notfake' });
       const destroys = cold('  -------(a|) ');
